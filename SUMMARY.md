@@ -1,8 +1,8 @@
 # Debian 快速入门指南
 
 * [本书简介](README.md)
-* [Debian 简介]()
-* [与 Redhat 系的主要区别]()
+* [Debian 简介](intro.md)
+* [与 Redhat 系的主要区别](diff-with-redhat.md)
 * [安装]()
 * [基础配置]()
   * [网络]()
