@@ -21,7 +21,7 @@
 | 维护方 | 社区 | 企业 ( 由 Red Hat 公司维护 ) |
 | 查看系统版本 | `/etc/debian_version` <br> ( 但多数时候使用 `lsb_release` ) | `/etc/redhat-release` |
 | SELinux 支持 | 支持，但默认不安装 | 支持，且默认安装并启用强制模式 |
-| 安全性 | 默认启用 `AppArmer` | 使用 `SELinux` |
+| 安全性 | 默认启用 `AppArmor` | 使用 `SELinux` |
 | 官方维护软件包数量 | 多 | 少 ( 不使用 `EPEL` 或 `ELRepo` 等社区维护源 ) |
 | 软件包更新速度 | 快 (对于 `unstable` 与 `test` 版本 ) <br> 慢 (对于 `stable` 版本) | 非常慢 (多数时候需跟随大版本更新) |
 | 技术支持 | 无 ( 社区支持 ) | 有技术支持服务 ( 由 Red Hat 公司提供技术支持 ) |
