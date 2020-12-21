@@ -214,3 +214,21 @@ VMware 虚拟化环境可以看作一台完整的电脑，因此安装系统与�
 - 确认源并安装常用软件包
 
 这些将会在下一章节详细解说。
+
+但就目前而言，为了方便后续远程连接，可以先配置允许 `root` 用户进行远程访问。
+
+方法是修改 `/etc/ssh/sshd_config`, 在 32 行的
+
+```bash
+#PermitRootLogin prohibit-password
+```
+
+修改为：
+
+```bash
+PermitRootLogin yes
+```
+
+之后可以通过 SSH 远程登陆，方便后续实验。
+
+> 注意，实际应用中应尽量避免使用 `root` 用户
