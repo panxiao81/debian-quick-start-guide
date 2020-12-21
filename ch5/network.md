@@ -1,8 +1,8 @@
-在默认使用最小安装后的 Debian 将使用 `network` 网络管理器。
+使用最小安装 ( 未安装 GUI 情况下 ) 的 Debian 将使用 `network` 网络管理器。
 
 而安装 GUI 的情况下则会安装 `NetworkManager`
 
-配置网络的方式与其他 Linux 系统没有太多区别。
+配置网络的方式与其他 Linux 系统并没有太多区别。
 
 即便是使用最小方式安装的 Debian，也可配置使用 `NetworkManager` 来管理网络。
 
@@ -16,7 +16,7 @@
 
 默认情况下，在一个新安装的 Debian 中，网络是这样配置的，但 Debian 给出的最佳实现是将网络配置分网卡保存到 `/etc/network/interface.d/` 下。
 
-在我的安装好的系统中，网卡安装后默认配置为 DHCP 方式获取 IP 地址，`/etc/network/interfaces` 内容如下：
+在我的安装好的系统中，网卡默认配置为 DHCP 方式获取 IP 地址，`/etc/network/interfaces` 内容如下：
 
 ```bash
 # This file describes the network interfaces available on your system
@@ -33,7 +33,7 @@ allow-hotplug ens33
 iface ens33 inet dhcp
 ```
 
-当下，使用 systemd 的系统会使用 `biosdevname` 方案来对网卡命名，他的好处是网卡名不会因重启或一些原因而改变，但结果会导致网卡名不再像过去那种 `eth0` 一类的名字易于推断。
+当下，使用 systemd 的系统默认会使用 `biosdevname` 方案来对网卡命名，他的好处是网卡名不会因重启或更换物理硬件等其他情况而改变，但结果会导致网卡名不再像过去那种 `eth0` 一类的名字易于推断。
 
 因此配置网卡前，可能我们需要使用 `ip addr` 命令 ( [来自 iproute2 工具包](ch10/iproute2.md) ), 在我的例子中，运行如下：
 
@@ -64,13 +64,12 @@ auto ens33
 iface ens33 inet dhcp
 ```
 
-如配置静态地址，则写作如下：
+如配置静态 IPv4 地址，则写作如下：
 
 ```bash
 auto ens33
 iface ens33 inet static
   address 192.168.0.3/24  # IP/CIDR 形式的 IP 地址
-  network 192.168.0.0  # 网络号
   gateway 192.168.0.1  # 网关地址
 ```
 
@@ -87,5 +86,45 @@ nameserver 114.114.114.114
 ifdown ens33
 ifup ens33
 ```
+> 文档： [man interface(5)](http://man.he.net/?topic=interfaces&section=all)
 
 # NetworkManager
+
+NetworkManager 是一个由 GNOME 项目开发的，使得 Linux 的网络配置尽可能简单，开箱即用而开发的软件包。
+
+目前 Red Hat 发行版已经自带并默认使用 NetworkManager 来管理网络。
+
+如何查看当前的 Debian 安装是否使用 NetworkManager？
+
+- 使用 `nmcli` 或 `nmtui` 命令，如果运行了 NetworkManager 的管理工具，则当前系统可能在使用 NetworkManager 管理网络
+- 使用 `systemctl status network-manager` 查看服务状态，如果具有该服务，并且服务正在运行，则说明当前系统正在使用 NetworkManager 管理网络
+
+NetworkManager 与传统的 network 网络管理器不可同时使用，如果使用两者同时管理同一网卡会造成冲突。
+
+最小化安装的 Debian 不会安装 NetworkManager，若要使用 NetworkManager，需要安装软件包。
+
+```sh
+apt install networkmanager
+```
+
+屏幕输出
+
+```console
+
+```
+
+安装 NetworkManager 后，原有在 `/etc/network/interfaces` 中的网络配置会被注释掉，并被 NetworkManager 的配置取代。
+
+NetworkManager 会带来两个新的网络配置工具，`nmcli` 与 `nmtui` 。
+
+但 NetworkManager 会覆盖已有的所有网络配置，包括 DNS 在内，因此所有配置要使用 NetworkManager 配套工具进行。
+
+`nmtui` 是一个图形化方式配置网络的工具，易于上手。
+
+在终端中输入
+
+```sh
+nmtui
+```
+
+即可打开 `nmtui` 工具。
