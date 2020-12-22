@@ -292,3 +292,7 @@ nmtui
 选中一个连接按 `Enter` 键后，可以很轻松的修改配置。
 
 修改好配置后，回到第一个界面，进入 `Activate a connection`，选择修改的连接，按两下 `Enter` 键重新激活即可。
+
+> 扩展阅读： [Red Hat Enterprise Linux 7 联网指南](https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/7/html/networking_guide/index)
+
+ 
