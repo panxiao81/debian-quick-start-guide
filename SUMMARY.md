@@ -6,7 +6,7 @@
 * [安装](install.md)
 * [基础配置](config.md)
   * [网络](ch5/network.md)
-  * [本地用户]()
+  * [本地用户](ch5/user.md)
   * [时间同步]()
   * [sudo]()
   * [挂载点]()
