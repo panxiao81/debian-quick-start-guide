@@ -9,7 +9,7 @@
   * [本地用户](ch5/user.md)
   * [时间同步](ch5/ntp.md)
   * [sudo](ch5/sudo.md)
-  * [挂载点]()
+  * [挂载点](ch5/mount.md)
 * [软件包]()
   * [二进制包 deb]()
   * [包管理工具 dpkg]()
