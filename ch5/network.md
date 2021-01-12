@@ -76,15 +76,15 @@ iface ens33 inet static
 DNS 信息填入 `/etc/resolv.conf`
 
 ```bash
-nameserver 114.114.114.114
+$ nameserver 114.114.114.114
 ```
 
 重启网卡生效
 
 ```sh
 # 重启网卡
-ifdown ens33
-ifup ens33
+$ ifdown ens33
+$ ifup ens33
 ```
 > 文档： [man interface(5)](http://man.he.net/?topic=interfaces&section=all)
 
@@ -106,7 +106,7 @@ NetworkManager 与传统的 network 网络管理器不可同时使用，如果�
 最小化安装的 Debian 不会安装 NetworkManager，若要使用 NetworkManager，需要安装软件包。
 
 ```sh
-apt install network-manager
+$ apt install network-manager
 ```
 
 屏幕输出
@@ -184,7 +184,7 @@ NetworkManager 会带来两个新的网络配置工具，`nmcli` 与 `nmtui` 。
 在继续使用之前，我们将原配置文件的网卡配置注释。
 
 ```console
-root@debian:~# vi /etc/network/interfaces
+$ root@debian:~# vi /etc/network/interfaces
 
 ```
 
@@ -208,8 +208,8 @@ iface lo inet loopback
 接下来重启 `networking` 与 `network-manager` 服务
 
 ```shell
-systemctl restart networking
-systemctl restart network-manager
+$ systemctl restart networking
+$ systemctl restart network-manager
 ```
 
 ### nmtui
@@ -219,7 +219,7 @@ systemctl restart network-manager
 在终端中输入
 
 ```sh
-nmtui
+$ nmtui
 ```
 
 即可打开 `nmtui` 工具。
