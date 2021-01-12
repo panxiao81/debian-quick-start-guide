@@ -8,7 +8,7 @@
   * [网络](ch5/network.md)
   * [本地用户](ch5/user.md)
   * [时间同步](ch5/ntp.md)
-  * [sudo]()
+  * [sudo](ch5/sudo.md)
   * [挂载点]()
 * [软件包]()
   * [二进制包 deb]()
