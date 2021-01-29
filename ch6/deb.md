@@ -8,7 +8,7 @@
 
 一个 `deb` 软件包包含这个包的元信息 ( `metadata` )，以及实际的二进制或源码，加上其他所需文件。
 
-元信息中包含了当前软件包的版本号，依赖，冲突，不兼容等，他的格式类似于电子邮件头 ( 定义于 [RFC 2822](https://tools.ietf.org/html/rfc2822)，当前最新版为 [RFC 5322](https://tools.ietf.org/html/rfc5322))，可以通过 `apt-cache` 查看。
+元信息中包含了当前软件包的版本号，依赖，冲突，不兼容等，他的格式类似于电子邮件头 ( 定义于 [RFC 2822](https://tools.ietf.org/html/rfc2822)，可以通过 `apt-cache` 查看。
 
 例如，以下为 `apt` 软件包的元信息：
 
