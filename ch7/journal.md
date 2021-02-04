@@ -14,7 +14,7 @@ Journal 的日志是二进制形式保存在硬盘上的，这点让很多人反
 $ sudo mkdir -p /var/log/journal
 $ sudo chown -R systemd-journal:systemd-journal /var/log/journal
 $ sudo chmod 2775 /var/log/journal
-$ sudo systemctl restart systemd-journal.service
+$ sudo systemctl restart systemd-journald.service
 ```
 
 # 查看日志
@@ -108,5 +108,7 @@ $ sudo systemctl restart systemd-journald
 ```
 
 > 阅读资料：
+> 
 > [journalctl：查询 systemd 日记](https://documentation.suse.com/zh-cn/sles/15-SP2/html/SLES-all/cha-journalctl.html)
+>
 > [systemd (简体中文)/Journal (简体中文)](https://wiki.archlinux.org/index.php/Systemd_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)/Journal_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87))
