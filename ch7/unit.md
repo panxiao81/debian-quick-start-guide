@@ -24,7 +24,7 @@ Unit ( 单元 ) 是 Systemd 管理系统的基本单位，分为：
 - start 激活单元
 - stop 停止单元
 - restart 重启单元
-- reload 重新加载配置
+- reload 在不重启服务的情况下重新加载配置文件 
 - status 输出单元运行状态
 - enable 设置开机自启
 - disable 取消开机自启
