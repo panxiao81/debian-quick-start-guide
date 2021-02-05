@@ -12,7 +12,7 @@ Journal 的日志是二进制形式保存在硬盘上的，这点让很多人反
 
 ```sh
 $ sudo mkdir -p /var/log/journal
-$ sudo chown -R systemd-journal:systemd-journal /var/log/journal
+$ sudo chown -R :systemd-journal /var/log/journal
 $ sudo chmod 2775 /var/log/journal
 $ sudo systemctl restart systemd-journal.service
 ```
