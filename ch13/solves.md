@@ -1,4 +1,14 @@
-# Client Task
+> 写在前面的小建议
+>
+> 拿到服务器首先记得修改主机名与 IP！
+>
+> vim 使用不习惯不用强求，没人拦着你用 nano
+>
+> 如果你是 vim 用户，记得在新系统里安装好 vim 软件包：`vim` `vim-common` `vim-scrtpts` `ctags`，会加快写配置文件的时间，事半功倍
+>
+> 防火墙放在最后配置
+>
+> 可以把所有机器的 SSH 全部打开，在 Client 上 SSH 上去配置会快一点
 
 # 登录
 
@@ -110,6 +120,32 @@ $ reboot
 
 在配置后续机型时，会回来此机配置后续项目。
 
+# Client Task
+
+* 要求能访问所有服务器，用于测试应用服务
+* 为主机安装 GNOME 桌面环境
+* 调整显示分辨率为 1280x768
+* 测试 DHCP，网卡 IPv4 地址为自动获取
+* 测试 DNS，安装 dnsutils 与 dig 命令行工具
+* 测试 Web，安装 Firefox 浏览器，curl 命令行测试工具，在任何时候进行访问测试时不允许弹出安全警告信息
+* 测试 SSH，安装 SSH 命令行工具
+* 测试 VPN，安装 OPENVPN 客户端工具软件
+* 测试 FTP，安装 lftp 客户端工具
+* 测试文件共享，安装 smbclient 客户端工具
+* 测试 Mail，安装 Thunderbird，并能正常进行邮件收发
+* 其他设定均采用默认设定
+
+## 题解
+
+安装桌面环境 
+
+```sh
+$ apt install gnome
+```
+
+重启即可
+
+
 
 # Rserver Task
 
@@ -118,8 +154,8 @@ $ reboot
   * 开启路由转发功能
 * iptables
   * 默认阻挡所有流量
-  * 添加必要的 NAT 规则和流量放行规则，正常情况下 Internet 网络不能访问 office 网络，并使所有服务正常工作
-  * 添加必要的端口转发规则
+  * 添加必要的 NAT 规则，使 Office 和 Service 网络能够访问 Internet
+  * 添加必要的规则以满足其他服务所需，禁止创建放行所有流量的规则
 * DHCP
   * 为客户端分配 IP 范围为 10.10.100.1 - 10.10.100.50
   * 按照实际配置 DNS 与 GATEWAY
@@ -133,7 +169,7 @@ $ reboot
   * 签发数字证书，签发者信息
     * 国家 = CN
     * 单位 = Inc
-    * 组织机构 = www.sdskills.com
+    * 组织机构 = www.skills.com
     * 公用名 = Skill Global Root CA
 
 ## 题解
@@ -169,11 +205,11 @@ address 172.16.100.254/25
 
 auto ens224
 iface ens224 inet static
-address 192.168.10.2/28
+address 10.10.100.254/24
 
 auto ens256
 iface ens256 inet static
-address 10.10.10.254/24
+address 192.168.10.2/28
 ```
 
 接下来启用网卡
@@ -185,10 +221,10 @@ $ ifup ens192 ens224 ens256
 配置主机名
 
 ```sh
-$ hostnamectl set-hostname Rserver.sdskills.com
+$ hostnamectl set-hostname Rserver
 ```
 
-修改 `/etc/hosts`,略
+修改 `/etc/hosts`,将 FQDN 写入 `hosts` 文件
 
 打开内核的 IPv4 转发，编辑 `/etc/sysctl.conf`，28 行处的 `net.ipv4.ip_forward=1` 去掉前面的注释，保存文件。
 
@@ -199,6 +235,8 @@ $ sysctl -p
 ```
 
 这台电脑实际上要作为拓扑中的接入路由器来使用，因此后续的网关设备全部指定此计算机
+
+FQDN 在 Linux 上是通过 DNS 解析实现的，验证配置使用 `hostname -f`
 
 ## iptables
 
@@ -227,8 +265,225 @@ iptables -P FORWARD ACCEPT
 
 # 设定规则
 iptables -A INPUT -i lo -j ACCEPT # 放行所有本机流量
+iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT # 放行状态流量
+iptables -A INPUT -i ens224 -p tcp -dport 2222 -j ACCEPT # 放行 SSH 流量
 
 ```
 
+## DHCP
 
+安装软件包 `isc-dhcp-server`
+
+```sh
+$ apt install isc-dhcp-server
+```
+
+没有做配置的情况下，安装时会提示服务无法启动，这是正常的。
+
+要修改的文件有 `/etc/default/isc-dhcp-server` 与 `/etc/dhcp/dhcpd.conf`
+
+首先修改 `/etc/default/isc-dhcp-server` 指定监听网卡
+
+```sh
+INTERFACESv4="ens224"
+```
+
+接下来编辑 `/etc/dhcp/dhcpd.conf`
+
+在文件 50 行处有一个写的较完整的示例配置，可以直接复制使用
+
+```sh
+subnet 10.10.100.0 netmask 255.255.255.0 {
+  range 10.10.100.1 10.10.100.50;
+  option domain-name-servers 172.16.100.201;
+  option domain-name "sdskills.com";
+  option routers 10.10.100.254;
+  option broadcast-address 10.10.100.255;
+  default-lease-time 600;
+  max-lease-time 7200;
+}
+
+host client {
+  hardware ethernet 00:0c:29:4c:e3:a7;
+  fixed-address 10.10.100.51;
+}
+```
+
+其中，client 的 MAC 地址可通过在 Client 上使用 `ip link` 查看
+
+启动服务，并确保开机启动
+
+```sh
+$ systemctl start isc-dhcp-server
+$ systemctl enable isc-dhcp-server
+```
+
+## SSH
+
+每次修改配置文件时，使用 `systemctl reload ssh` 使配置生效
+
+编辑 `/etc/ssh/sshd_config`
+
+修改 Port 为 2222
+
+临时修改 PermitRootLogin 为 yes
+
+拷贝 SSH key
+
+```sh
+# 在 Client 上
+$ ssh-keygen
+# 无脑回车
+$ ssh-copy-id root@10.10.100.254 -p 2222
+# 先在 Rserver 端允许 Root 账户登录，后再修改回来
+```
+
+编辑 `/etc/hosts.deny` 来限制登录
+
+```sh
+sshd:ALL except 10.10.100.51: deny
+# 意为除去 10.10.100.51 主机以外的其他所有主机均禁止访问本机的 SSH 服务
+```
+
+确保服务开机启动
+
+```sh
+$ systemctl start ssh
+$ systemctl enable ssh
+```
+
+## CA
+
+在配置 CA 之前，确保当前时间正确，时区正确，最好先配置 NTP 服务器再回来配置 CA
+
+修改 `/usr/lib/ssl/openssl.cnf`
+
+第 28 行处，修改根目录为 `/CA`
+
+创建子目录：
+
+```sh
+$ mkdir newcerts certs crl private
+```
+
+并创建两个文件：
+
+```sh
+$ touch ./index.txt
+$ echo 1000 > serial
+```
+
+生成根证书私钥
+
+```sh
+$ openssl genrsa -aes256 -out private/cakey.pem 4096
+# 输入密码
+```
+
+使用上一步生成的私钥签发证书：
+
+```sh
+$ openssl req -x509 -new -key /CA/private/cakey.pem -out /CA/cacert.pem
+```
+
+# Server01
+
+## Network
+
+配置 IP 与主机名跟上面方法相同，不多赘述
+
+## DNS
+
+Debian 将 Bind 的配置文件分成了很多份
+
+对于 DNS 转发器，修改 `/etc/bind/named.conf.options`,文件中有一段被注释掉的 forwarders,取消注释后修改即可
+
+将正向与反向解析配置放进 `/etc/bind/named.conf.local`，如下:
+
+```sh
+zone "sdskills.com {
+  type master;
+  file "/etc/bind/db.sdskills.com";
+};
+
+zone "100.16.172.in-addr.aroa" {
+  type master;
+  file "/etc/bind/db.172.16.100";
+};
+```
+
+不要忘记末尾的分号！
+
+接下来创建区域文件，从已有的区域文件复制修改即可
+
+```sh
+$ cp /etc/bind/db.local /etc/bind/db.sdskills.com
+$ cp /etc/bind/db.127 /etc/bind/db.172.16.100
+```
+
+将 SOA 修改为自己的域名 ( 注意域名后的点！ )
+
+添加自己需要的记录即可
+
+使用 named-checkconf 和 named-checkzone 来检查语法格式是否正确
+
+```console
+root@Server01:~# named-checkconf
+root@Server01:~# named-checkzone sdskills.com /etc/bind/db.sdskills.com
+zone sdskills.com/IN:  loaded serial 2
+OK
+root@Server01:~#
+```
+
+当前的 Bind 版本默认只允许本地与已知的本地局域网访问服务器进行查询，因此需要修改配置文件，改回以前的放行模式：
+
+修改 `/etc/bind/named.conf.options`，在后面增加三行：
+
+```sh
+options {
+     ...
+     allow-recursion { any; };
+     allow-query { any; };
+     allow-query-cache { any; };
+     ...
+ };
+ ```
+
+放行所有主机。
+
+## apache
+
+题目中需要使用 LDAP 做认证，配置完 LDAP 后再来
+
+
+
+## SSH
+
+几乎同理，参照 Rserver 配置
+
+## LDAP
+
+安装配置 LDAP 前，先创建好需求的 100 个用户
+
+这个肯定不能手敲，所以上 Shell 脚本:
+
+```sh
+#!/bin/bash
+# 在一个等宽的 100 个数中循环
+for i in $(seq -w 100)
+do
+  # 新建用户
+  useradd lduser$i
+  # 给用户设置密码
+  echo "lduser$i:Chinaskill20!" | chpasswd
+done
+```
+
+红帽系可以使用 `passwd --stdin` ，但 Debian 的 `passwd` 不支持这个参数，所以需要使用另一个工具 `chpasswd`
+
+脚本写完，保存为 useradd.sh，赋予执行权限直接运行，或者：
+
+```sh
+$ bash useradd.sh
+```
 

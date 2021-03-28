@@ -242,4 +242,26 @@ Root distance: 30.112ms (max: 5s)
 
 也可使用 `chrony` 使用和提供 NTP 服务，此处不再赘述，RHEL 8 中的软件源现在默认自带 `chrony` 配置与 `ntpd` 大同小异。
 
+# chrony
+
+## 作为服务器
+
+chrony 配置对比 ntpd 更为简单
+
+对于 Debian，配置文件存放在 `/etc/chrony/chrony.conf`
+
+仅需要简单的使用 `allow` 即可
+
+```sh
+allow 10.10.100.0/24
+```
+
+需要使用本地时间的场合，也只需要简单的加一句 `local` 即可
+
+```sh
+local stratum 10
+```
+
 > 参考资料：[ArchWiki:Network Time Protocol daemon (简体中文)](https://wiki.archlinux.org/index.php/Network_Time_Protocol_daemon_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87))
+> 
+> [Red Hat Documentation:CONFIGURING NTP USING THE CHRONY SUITE](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/system_administrators_guide/ch-configuring_ntp_using_the_chrony_suite) 
