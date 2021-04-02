@@ -262,6 +262,18 @@ allow 10.10.100.0/24
 local stratum 10
 ```
 
+## 客户端
+
+正常在配置文件里写入 `server pool.ntp.org iburst`
+
+查看当前时间服务器使用 `chronyc sources`
+
+正常情况下 Chrony 会步进同步时钟，其与 NTPd 的工作方式很不相同，并没有一个真正意义上与 `ntpdate` 作用类似的强制同步方式
+
+但如果需要的话，使用 `chronyc -a makestep`
+
+如果 chronyd 没有运行，正如 `ntpdate` 使用的那种情况，则可以使用 `chronyd -q 'server pool.ntp.org iburst'` 手工同步时间。
+
 > 参考资料：[ArchWiki:Network Time Protocol daemon (简体中文)](https://wiki.archlinux.org/index.php/Network_Time_Protocol_daemon_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87))
 > 
 > [Red Hat Documentation:CONFIGURING NTP USING THE CHRONY SUITE](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/system_administrators_guide/ch-configuring_ntp_using_the_chrony_suite) 

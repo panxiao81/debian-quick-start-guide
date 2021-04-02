@@ -6,7 +6,7 @@
 >
 > 如果你是 vim 用户，记得在新系统里安装好 vim 软件包：`vim` `vim-common` `vim-scrtpts` `ctags`，会加快写配置文件的时间，事半功倍
 >
-> 防火墙放在最后配置
+> 防火墙放在最后配置，限制 SSH 访问策略也放在最后配置，但免密登录什么时候配都可以
 >
 > 可以把所有机器的 SSH 全部打开，在 Client 上 SSH 上去配置会快一点
 
@@ -14,10 +14,10 @@
 
 - Username：root
 - Password：ChinaSkill20!
-- Username：Chinaskills20
-- Password：Chinaskills20!
+- Username：Chinaskill20
+- Password：Chinaskill20!
 
-除特别指定外，所有账号密码均为 `Chinaskills20!`
+除特别指定外，所有账号密码均为 `Chinaskill20!`
 
 # 系统配置
 
@@ -114,7 +114,7 @@ $ apt install gnome dnsutils firefox-esr curl openssh-client ftp thunderbird ope
 $ reboot
 ```
 
-桌面环境默认无法使用 `root` 账户登录，使用 `chinaskills20` 可登录进入桌面环境。
+桌面环境默认无法使用 `root` 账户登录，使用 `chinaskill20` 可登录进入桌面环境。
 
 右键选择 `Display Settings`，打开显示器设置，将分辨率改为 1280x768
 
@@ -226,6 +226,12 @@ $ hostnamectl set-hostname Rserver
 
 修改 `/etc/hosts`,将 FQDN 写入 `hosts` 文件
 
+修改 `127.0.1.1 debian` 这一行，修改为
+
+```sh
+127.0.1.1 Rserver.sdskills.com Rserver
+```
+
 打开内核的 IPv4 转发，编辑 `/etc/sysctl.conf`，28 行处的 `net.ipv4.ip_forward=1` 去掉前面的注释，保存文件。
 
 使配置文件生效
@@ -260,8 +266,8 @@ iptables -Z
 
 # 设定默认规则
 iptables -P INPUT DROP
-iptables -P OUTPUT ACCEPT
-iptables -P FORWARD ACCEPT
+iptables -P OUTPUT DROP
+iptables -P FORWARD DROP
 
 # 设定规则
 iptables -A INPUT -i lo -j ACCEPT # 放行所有本机流量
@@ -341,7 +347,7 @@ $ ssh-copy-id root@10.10.100.254 -p 2222
 编辑 `/etc/hosts.deny` 来限制登录
 
 ```sh
-sshd:ALL except 10.10.100.51: deny
+sshd:ALL except 10.10.100.51:deny
 # 意为除去 10.10.100.51 主机以外的其他所有主机均禁止访问本机的 SSH 服务
 ```
 
@@ -363,6 +369,7 @@ $ systemctl enable ssh
 创建子目录：
 
 ```sh
+$ cd /CA
 $ mkdir newcerts certs crl private
 ```
 
@@ -376,8 +383,7 @@ $ echo 1000 > serial
 生成根证书私钥
 
 ```sh
-$ openssl genrsa -aes256 -out private/cakey.pem 4096
-# 输入密码
+$ openssl genrsa -out private/cakey.pem 4096
 ```
 
 使用上一步生成的私钥签发证书：
@@ -455,7 +461,177 @@ options {
 
 题目中需要使用 LDAP 做认证，配置完 LDAP 后再来
 
+```sh
+apt install apache2
+```
 
+新建 `webuser` 用户，指定为系统用户并禁止登录
+
+```sh
+$ useradd -r webuser -s /sbin/nologin
+```
+
+修改 `/etc/apache2/envvars`
+
+将指定运行用户与组的变量修改
+
+```sh
+export APACHE_RUN_USER=webuser
+export APACHE_RUN_GROUP=webuser
+```
+
+网站目录放在 NFS 共享中，先做 Server02 再回来
+
+挂载 `/data/share`
+
+写入 `/etc/fstab`
+
+```sh
+172.16.100.202:/data/share  /data/share  nfs  defaults,_netdev  0  0
+```
+
+```sh
+$ mount -a
+```
+
+写 index.sh
+
+```sh
+$ mkdir /data/share/webroot
+$ vim /data/share/webroot/index.sh
+```
+
+```sh
+#!/bin/bash
+# This is index.sh
+echo "Content-type: text/html"
+echo ""
+echo "Current System Time is: $(date +"%F %r")"
+```
+
+修复目录权限，并使脚本可执行
+
+```sh
+$ chown -R webuser:webuser /data/share/webroot
+$ chmod 775 /data/share/webroot/index.sh
+```
+
+配置 Apahce，使 CGI 脚本可执行，并允许处理 Shell 脚本
+
+```sh
+$ vim /etc/apache2/conf-enabled/security.conf
+```
+
+```xml
+<Dictory "/data/share/webroot">
+    AllowOverride None
+    Options +ExecCGI -MultiViews
+    AddHandler cgi-script .cgi .sh .pl
+    Require all granted
+</Directory>
+```
+
+配置虚拟主机们，加上 SSL。
+
+签发证书
+
+```sh
+$ openssl req -new -key Server01.pem -out http.csr
+$ openssl ca -in http.csr -out http.pem
+```
+
+将证书传回 Server01 后，修复权限并放在对应目录
+
+```sh
+chmod 777 *.pem
+cp http.pem /etc/ssl/certs/http_sdskills_com.pem
+```
+
+Apache 提供了 SSL 的虚拟主机模板，在 `/etc/apache2/sites-available/default-ssl.conf
+
+将这个文件复制一份，然后修改
+
+```sh
+cp /etc/apache2/sites-available/default-ssl.conf /etc/apache2/sites-available/www.sdskills.com.conf
+vim /etc/apache2/sites-available/www.sdskills.com
+```
+
+原文件内容很多，只截取需要注意的部分
+
+```xml
+<VirtualHost _default_:443>
+    ServerName www.sdskills.com
+    ServerAlias *.sdskills.com
+    DocumentRoot /data/share/webroot
+
+    SSLEngine On
+
+    SSLCertificateFile /etc/ssl/certs/http_sdskills_com.pem
+    SSLCertificateKeyFile /etc/ssl/certs/Rserver.key
+</VirtualHost>
+```
+
+启用 SSL 模块，启用刚才修改的网站配置文件
+
+```sh
+$ a2enmod ssl
+$ a2ensite www.sdskills.com.conf
+```
+
+修改原始默认网站文件，将 80 端口访问重定向到 HTTPS
+
+```sh
+$ vim /etc/apache2/sites-enabled/000-default.conf
+```
+
+```xml
+<VirtualHost *:80>
+    ServerName www.sdskills.com
+    ServerAlias *.sdskills.com
+    # 把原有配置注释
+    # DocumentRoot /var/www/html
+
+    # 加入
+    redirect permanent / https://www.sdskills.com/
+</VirtualHost>
+```
+
+### 配置 LDAP 验证
+
+修改刚才写好的 /etc/apache2/conf-enabled/security.conf
+
+```xml
+<Dictory "/data/share/webroot">
+    AllowOverride None
+    Options +ExecCGI -MultiViews
+    AddHandler cgi-script .cgi .sh .pl
+    # 增加
+    AuthType basic
+    AuthBasicProvider ldap
+    AuthLDAPUrl "ldaps://localhost/ou=People,dc=sdskills,dc=com"
+    AuthName LDAP
+    # 注释掉这行，重写
+    #Require all granted
+    Require valid-user
+</Directory>
+# 在外面增加
+LDAPVerifyServerCert off
+```
+
+
+
+### MariaDB
+
+```sh
+$ apt install mariadb-server
+$ mysql_secure_installation
+```
+
+### PHP
+
+```sh
+$ apt install php libapache2-mod-php php-mysql
+```
 
 ## SSH
 
@@ -487,3 +663,171 @@ done
 $ bash useradd.sh
 ```
 
+安装 slapd 与 migrationtools
+
+```sh
+$ apt install slapd migrationtools
+```
+
+并配置 `slapd`
+
+```sh
+$ dpkg-reconfigure slapd
+```
+
+修改 `/etc/migrationtools/migrate_common.ph`,将原有域名改成需求的 `dc=sdskills,dc=com`
+
+migrationtools 脚本有一个 bug，由于 Debian 没有将文件放在该放的位置导致脚本找不到 migrate_common.ph 文件而报错。
+
+进入脚本的存放目录
+
+```sh
+$ cd /usr/share/migrationtools
+```
+
+修复发行版的一个 Bug，链接 `migrate_common.ph` 到 `/etc/perl`
+
+```sh
+$ ln -s /etc/migrationtools/migrate_common.ph /etc/perl
+```
+
+运行 `migrate_all_online.sh` 将本地信息合并进 LDAP
+
+```sh
+$ LDAPADD="/usr/bin/ldapadd -c" ETC_ALIASES="/dev/null" ./migrate_all_online.sh
+```
+
+其中，手动指定 `ldapadd` 命令的 -c 参数使其忽略错误，根据 Debian 文档指定 ETC_ALIASES 变量来避免一个错误
+
+| Question | Answer |
+| --- |  --- |
+| X.500 naming context | `dc=sdskill,dc=com` |
+| LDAP server hostname | `localhost` |
+| Manager DN | `cn=admin,dc=sdskill,dc=com` |
+| Bind credentials | 输入密码 |
+| Create DUAConfigProfile | no |
+
+生成证书私钥与证书签发请求
+
+```sh
+$ openssl genrsa -out Rserver.pem 4096
+$ openssl req -new -key Rserver.pem -out ldap.csr
+```
+
+在 Rserver 上给证书签名
+
+```sh
+$ openssl ca -in ldap.csr -out ldap.pem
+```
+
+将证书传回 Server01
+
+给证书文件赋予权限：
+
+```sh
+$ chmod 777 *.pem
+```
+
+本例中所有证书存放在 `/root` 下
+
+将 CA 根证书，Server01 的私钥，以及 LDAP 证书存放至 `/etc/ssl/certs/`
+
+配置 LDAP config，加入证书位置
+
+```sh
+$ apt install ldapvi
+$ ldapvi -Y EXTERNAL -h ldapi:/// -b cn=config
+```
+
+在 cn=config
+
+```sh
+olcTLSCACertificateFile: /etc/ssl/certs/Skill_Root_Global_CA.pem
+olcTLSCertificateKeyFile: /etc/ssl/certs/Rserver.key
+olcTLSCertificateFile: /etc/ssl/certs/Rserver_ldap.pem
+```
+
+保存退出，按 `y` 确认修改
+
+修改 `/etc/default/slapd` 打开 `ldaps://` 监听
+
+```sh
+$ vim /etc/default/slapd
+```
+
+```sh
+SLAPD_SERVICES="ldaps:/// ldapi:///"
+```
+
+# Server02
+
+## Network 
+
+大同小异，不再赘述
+
+## Disk ( Raid5 )
+
+```sh
+$ apt install mdadm
+```
+
+添加硬盘
+
+```sh
+$ mdadm -Cv /dev/md0 -l 5 -n 3 -x 1 /dev/sdb /dev/sdc /dev/sdd /dev/sde
+```
+
+| 参数 | 说明 |
+|-|-|
+| `-C` | 创建软件 RAID
+| `-v` | 显示详细信息
+| `-l` | 指定阵列类型，此处为 RAID 5
+| `-n` | 指定使用几块硬盘，不算备份盘 
+| `-x` | 指定使用几块硬盘作为备份
+
+创建 LVM
+
+```sh
+# 安装逻辑卷管理工具
+$ apt install lvm2
+# 创建卷组与逻辑卷
+$ vgcreate /dev/vg01 /dev/md0
+$ lvcreate -l 510 -n lv01 /dev/vg01
+# 使用 ext4 格式化
+$ mkfs.ext4 /dev/vg01/lv01
+```
+
+写入 /etc/fstab 实现自动挂载
+
+```sh
+$ mkdir /data
+$ vim /etc/fstab
+```
+
+写入
+
+```sh
+$ /dev/vg01/lv01    /data    ext4    defaults    0  0
+```
+
+```sh
+$ mount -a
+```
+
+## NFS
+
+```sh
+apt install nfs-kernel-server
+```
+
+修改 `/etc/exports`
+
+```sh
+/data/share  172.16.100.128/25(rw,sync,no_subtree_check)
+```
+
+重启服务
+
+```sh
+systemctl restart nfs-kernel-server
+```

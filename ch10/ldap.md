@@ -22,6 +22,10 @@ LDIF 文件太难写，比赛如果不提供 Web 界面，就使用 MigrationToo
 LDAPADD="/usr/bin/ldapadd -c" ETC_ALIASES=/dev/null ./migrate_all_online.sh
 ```
 
+脚本实现有些问题，这个锅发行版背，至少当前用的最新版镜像还没修复。
+
+需要把 `migrate_common.ph` 手动符号链接到 `/etc/perl`
+
 该脚本会询问一些问题，例如 X.500 名称等：见下面表格：
 
 根据实际情况修改填写
@@ -33,6 +37,8 @@ LDAPADD="/usr/bin/ldapadd -c" ETC_ALIASES=/dev/null ./migrate_all_online.sh
 | Manager DN | `cn=admin,dc=falcot,dc=com` |
 | Bind credentials | the administrative password |
 | Create DUAConfigProfile | no |
+
+合并时会提示错误，这是正常的，因此需要额外指定 `ldapadd` 的 `-c` 参数，使其正常运行
 
 ---
 
