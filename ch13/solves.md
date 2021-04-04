@@ -407,7 +407,7 @@ Debian 将 Bind 的配置文件分成了很多份
 将正向与反向解析配置放进 `/etc/bind/named.conf.local`，如下:
 
 ```sh
-zone "sdskills.com {
+zone "sdskills.com" {
   type master;
   file "/etc/bind/db.sdskills.com";
 };

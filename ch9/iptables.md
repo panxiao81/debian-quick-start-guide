@@ -25,7 +25,7 @@ iptables 默认分 3 张 table ( 表 ) 而规则作为 chain 存储在对应的�
 如：设定 INPUT 的默认规则为 DROP
 
 ```sh
-$ iptables -P DROP
+$ iptables -P INPUT DROP
 ```
 
 添加规则

@@ -31,7 +31,7 @@
 
 签发根证书前，先做一些配置。
 
-修改 `/etc/lib/ssl/openssl.cnf`，在 48 行，`[CA_default]` 中，修改 `dir` 为存放 CA 需要文件的根目录，本例为 `/CA`
+修改 `/usr/lib/ssl/openssl.cnf`，在 48 行，`[CA_default]` 中，修改 `dir` 为存放 CA 需要文件的根目录，本例为 `/CA`
 
 修改后，创建两个文件
 
