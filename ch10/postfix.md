@@ -50,3 +50,4 @@ $ systemctl reload postfix
 
 在 `10-master.conf` 中，找到 `inet_listener imaps`,将端口与 `ssl` 一行取消注释
 
+在 `postfix` 的 `master.conf` 中注释 `smtp` 行即可停止监听 25 端口，dovecot 则要将 `imap` 监听端口从 `143` 改为 `0`
