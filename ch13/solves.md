@@ -627,10 +627,36 @@ $ apt install mariadb-server
 $ mysql_secure_installation
 ```
 
+增加一个超级用户用于网页端管理，新版的 MariaDB 与 MySQL 已不允许用户使用 root 在命令行以外的场合登录
+
+```sh
+$ mariadb -uroot -p
+```
+
+```sql
+CREATE USER '新用户'@'%' IDENTIFIED BY '新用户的密码';
+GRANT ALL PRIVILEGES ON *.* TO '新用户'@'%' WITH GRANT OPTION;
+```
+
+接下来托管 phpMyAdmin 即可使用新创建的用户登录
+
 ### PHP
 
 ```sh
 $ apt install php libapache2-mod-php php-mysql
+```
+
+托管 phpMyAdmin 需要安装 `php-xml` 模块
+
+```sh
+$ apt install php-xml
+$ systemctl restart apache2
+```
+
+将网站文件复制后确认权限正确
+
+```sh
+$ chown -R webuser:webuser /data/share/htdocs
 ```
 
 ## SSH
