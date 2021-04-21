@@ -857,3 +857,16 @@ apt install nfs-kernel-server
 ```sh
 systemctl restart nfs-kernel-server
 ```
+# Server04
+关于 DNS 解析的第三问
+
+DNS 根这么写
+
+![图 1](../images/88d1d612bf415cc826d472bf4f243810109e143cf2f0fbc05a8f64f30b496d3d.png)  
+
+DNS 默认配置文件 /etc/bind/named.conf.default-zones 修改根域名部分
+
+即一个点
+
+![图 2](../images/80e6fac10d65867c6097025667963fbc700a0596be86b3b0dcd33ffc9480fe48.png)  
+

@@ -17,7 +17,7 @@
 在服务器端，生成 Static Key
 
 ```sh
-$ openvpn --genkey --static static.key
+$ openvpn --genkey --secret static.key
 $ cp static.key /etc/openvpn
 ```
 
